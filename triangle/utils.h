@@ -1,3 +1,1 @@
-#include <GL/glew.h>
-
-GLuint createShaderProgram();
+GLuint create_program();

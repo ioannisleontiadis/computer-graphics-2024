@@ -1,19 +1,14 @@
-#include "utils.h"
-
 #include <GL/glew.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-GLuint compileShader(char *filename, GLuint type) {
+GLuint compile_shader(char *filename, GLenum type) {
   GLuint shader;
+  GLint success;
+
   FILE *file;
-  char *buffer = NULL;
-  size_t len = 0;
-  ssize_t n;
-  GLchar *source[100] = {NULL};
-  int line = 0;
-  int success;
+  char *source;
+  long int length;
 
   file = fopen(filename, "r");
 
@@ -22,12 +17,12 @@ GLuint compileShader(char *filename, GLuint type) {
     exit(EXIT_FAILURE);
   }
 
-  while ((n = getline(&buffer, &len, file)) != -1) {
-    source[line] = malloc(n * sizeof(char));
-    memcpy(source[line], buffer, n);
-    line++;
-  }
-
+  fseek(file, 0, SEEK_END);
+  length = ftell(file);
+  fseek(file, 0, SEEK_SET);
+  source = malloc((length + 1) * sizeof(char));
+  fread(source, sizeof(char), length, file);
+  source[length] = '\0';
   fclose(file);
 
   if (type == GL_VERTEX_SHADER) {
@@ -36,13 +31,8 @@ GLuint compileShader(char *filename, GLuint type) {
     shader = glCreateShader(GL_FRAGMENT_SHADER);
   }
 
-  glShaderSource(shader, line, (const GLchar **)source, NULL);
+  glShaderSource(shader, 1, (const GLchar **)&source, NULL);
   glCompileShader(shader);
-
-  for (int i = 0; i < line; i++) {
-    free(source[i]);
-  }
-
   glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 
   if (success == GL_FALSE) {
@@ -55,18 +45,19 @@ GLuint compileShader(char *filename, GLuint type) {
   return shader;
 }
 
-GLuint createShaderProgram() {
-  GLuint vertexShader, fragmentShader, shaderProgram;
-  int success;
-  shaderProgram = glCreateProgram();
-  vertexShader = compileShader("vertex.shader", GL_VERTEX_SHADER);
-  fragmentShader = compileShader("fragment.shader", GL_FRAGMENT_SHADER);
+GLuint create_program() {
+  GLuint vertex_shader, fragment_shader, program;
+  GLint success;
 
-  glAttachShader(shaderProgram, vertexShader);
-  glAttachShader(shaderProgram, fragmentShader);
+  program = glCreateProgram();
+  vertex_shader = compile_shader("vertex.shader", GL_VERTEX_SHADER);
+  fragment_shader = compile_shader("fragment.shader", GL_FRAGMENT_SHADER);
 
-  glLinkProgram(shaderProgram);
-  glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+  glAttachShader(program, vertex_shader);
+  glAttachShader(program, fragment_shader);
+
+  glLinkProgram(program);
+  glGetProgramiv(program, GL_LINK_STATUS, &success);
 
   if (success == GL_FALSE) {
     printf("shader program failed to link\n");
@@ -75,5 +66,5 @@ GLuint createShaderProgram() {
 
   printf("shader program linked successfully\n");
 
-  return shaderProgram;
+  return program;
 }

@@ -42,7 +42,7 @@ int main() {
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
 
-  shaderProgram = createShaderProgram();
+  shaderProgram = create_program();
 
   while (glfwWindowShouldClose(window) == GL_FALSE) {
     glUseProgram(shaderProgram);
